@@ -34,7 +34,7 @@ public class Autenticacao {
                 if (dados.length >= 3) { 
                     try {
                         String emailArquivo = dados[1].trim();
-                        Integer senhaArquivo = Integer.parseInt(dados[3].trim());
+                        Integer senhaArquivo = Integer.parseInt(dados[4].trim());
                         if (emailArquivo.equalsIgnoreCase(email) || senhaArquivo.equals(senha)) {
                             return true;
                         }
@@ -70,4 +70,25 @@ public class Autenticacao {
         }
         return "Usuario não encontrado";
     }
+    public static String tipoConta(String email, String caminhoArquivo) {
+    try (BufferedReader leitor = new BufferedReader(new FileReader(caminhoArquivo))) {
+        String linha;
+        while ((linha = leitor.readLine()) != null) {
+            if (linha.trim().isEmpty()) continue;
+
+            String[] dados = linha.split(",");
+            if (dados.length >= 4) {
+                String emailArquivo = dados[1].trim();
+                if (emailArquivo.equalsIgnoreCase(email.trim())) {
+                    return dados[3].trim();
+                }
+            }
+        }
+    } catch (IOException e) {
+        System.out.println("Erro ao ler o arquivo: " + e.getMessage());
+    }
+    return "Usuario não encontrado";
+}
+
+
 }

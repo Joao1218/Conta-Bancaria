@@ -3,10 +3,12 @@ public class Usuario {
     private String email;
     private Long cpf;
     private Integer senha;
-    public Usuario(String nome, String email, Long cpf, Integer senha) {
+    private String tipoConta;
+    public Usuario(String nome, String email, Long cpf,String tipoConta, Integer senha) {
         this.nome = nome;
         this.email = email;
         this.cpf = cpf;
+        this.tipoConta = tipoConta;
         this.senha = senha;
     }
     public String getNome() {
@@ -30,9 +32,15 @@ public class Usuario {
     public Integer getSenha() {
         return senha;
     }
+    public String getTipoConta() {
+        return tipoConta;
+    }
+    public void setTipoConta(String tipoConta) {
+        this.tipoConta = tipoConta;
+    }
      @Override
     public String toString() {
-        return nome + "," + email + ", " + cpf + ", " + senha;
+        return nome + "," + email + ", " + cpf + ","+ tipoConta+ ", "+ senha;
     }
     
 }

@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.Scanner;
 
 public class App {
@@ -20,12 +21,78 @@ public class App {
         while (!resposta.equals(3)) {
             if (resposta.equals(1)) {
                 System.out.println("<-------------- Login de Usuario -------------->");
-                System.out.println("Email: ");
+                System.out.print("Email: ");
                 String email = sc.nextLine();
-                System.out.println("Senha: ");
+                System.out.print("Senha: ");
                 Integer senha = sc.nextInt();
-                if(Autenticacao.login(email, senha, path)){
-                    System.out.println("<-------------- Bem vindo a sua conta "+Autenticacao.nome(email, path)+" -------------->");
+                if (Autenticacao.login(email, senha, path)) {
+                    System.out.println("<-------------- Bem vindo a sua conta " + Autenticacao.nome(email, path)
+                            + " -------------->");
+                    System.out.println("[1] - Sacar");
+                    System.out.println("[2] - Depositar");
+                    System.out.println("[3] - Ver saldo na conta");
+                    System.out.println("[4] - Ver extrato");
+                    System.out.println("[5] - Sair");
+                    Integer respostaEscolha = sc.nextInt();
+                    while (!respostaEscolha.equals(5)) {
+                        String tipo = Autenticacao.tipoConta(email, path);
+                        ContaBase conta = null;
+                        if (tipo.equalsIgnoreCase("contaCorrente")) {
+                            conta = new contaCorrente();
+                        } else if (tipo.equalsIgnoreCase("contaPoupanca")) {
+                            conta = new contaPoupanca();
+                        } else {
+                            System.out.println("Tipo de conta invalido");
+                        }
+                        if (conta != null) {
+                            if (respostaEscolha.equals(1)) {
+                                System.out.println("Qual valor você deseja sacar?");
+                                Double valorSaque = sc.nextDouble();
+                                String nomeUsuario = Autenticacao.nome(email, path);
+                                String tipoConta = Autenticacao.tipoConta(email, path);
+                                if (nomeUsuario.equals("Usuario não encontrado") || tipoConta.equals("Usuario não encontrado")) {
+                                    System.out.println("Erro: Usuário ou tipo de conta inválido");
+                                    return;
+                                }
+
+                                String caminhoArquivo = pathPasta + File.separator + nomeUsuario + File.separator
+                                        + tipoConta + ".txt";
+
+                                if (conta.Saque(valorSaque, caminhoArquivo)) {
+                                    System.out.println("Saque realizado com sucesso");
+                                } else {
+                                    System.out.println("Erro: Não foi possivel realizar o deposito");
+                                }
+                            } else if (respostaEscolha.equals(2)) {
+                                System.out.println("Qual valor você deseja depositar?");
+                                Double valorDeposito = sc.nextDouble();
+                                String nomeUsuario = Autenticacao.nome(email, path);
+                                String tipoConta = Autenticacao.tipoConta(email, path);
+                                if (nomeUsuario.equals("Usuario não encontrado")
+                                        || tipoConta.equals("Usuario não encontrado")) {
+                                    System.out.println("Erro: Usuário ou tipo de conta inválido");
+                                    return;
+                                }
+
+                                String caminhoArquivo = pathPasta + File.separator + nomeUsuario + File.separator
+                                        + tipoConta + ".txt";
+
+                                if (conta.deposito(valorDeposito, caminhoArquivo)) {
+                                    System.out.println("Deposito realizado com sucesso");
+                                } else {
+                                    System.out.println("Erro: Não foi possivel realizar o deposito");
+                                }
+                            }
+                        }
+                    }
+                    System.out.println("<-------------- Bem vindo a sua conta " + Autenticacao.nome(email, path)
+                            + " -------------->");
+                    System.out.println("[1] - Sacar");
+                    System.out.println("[2] - Depositar");
+                    System.out.println("[3] - Ver saldo na conta");
+                    System.out.println("[4] - Ver extrato");
+                    System.out.println("[5] - Sair");
+                    respostaEscolha = sc.nextInt();
                 }
             } else if (resposta.equals(2)) {
                 System.out.println("<-------------- Cadastro de Usuario -------------->");
@@ -38,10 +105,17 @@ public class App {
                 System.out.println("Tipo de conta:");
                 System.out.println("[1] Corrente");
                 System.out.println("[2] Poupança");
-                Integer tipoConta = sc.nextInt();
+                Integer tipoContaNumber = sc.nextInt();
+                String tipoConta = "";
+                if (tipoContaNumber.equals(1)) {
+                    tipoConta = "contaCorrente";
+                } else if (tipoContaNumber.equals(2)) {
+                    tipoConta = "contaPoupanca";
+                }
                 System.out.print("Senha: ");
                 Integer senha = sc.nextInt();
-                Usuario usuario = new Usuario(nome, email, cpf, senha);
+                nome = removerAcentos(nome);
+                Usuario usuario = new Usuario(nome, email, cpf, tipoConta, senha);
                 if (Autenticacao.usuarioExiste(cpf, path)) {
                     System.out.println("Usuario já cadastrado");
                 } else {
@@ -52,11 +126,20 @@ public class App {
                         String caminho = pathPasta + nome;
                         File pasta = new File(caminho);
                         Boolean retorno = pasta.mkdir();
-                        if (tipoConta == 1) {
+                        if (tipoContaNumber == 1) {
                             String caminhoArquivo = pathPasta + nome + File.separator + "ContaCorrente.txt";
                             File TipoConta = new File(caminhoArquivo);
                             TipoConta.createNewFile();
-                        } else if (tipoConta == 2) {
+                            try (BufferedWriter contaWriter = new BufferedWriter(
+                                    new OutputStreamWriter(new FileOutputStream(caminhoArquivo),
+                                            StandardCharsets.UTF_8))) {
+                                contaCorrente contaCorrente = new contaCorrente();
+                                contaWriter.write(contaCorrente.toString());
+                                contaWriter.newLine();
+                            } catch (IOException e) {
+                                System.out.println("Erro ao escrever na conta: " + e.getMessage());
+                            }
+                        } else if (tipoContaNumber == 2) {
                             String caminhoArquivo = pathPasta + nome + File.separator + "ContaPoupanca.txt";
                             File TipoConta = new File(caminhoArquivo);
                             TipoConta.createNewFile();
@@ -78,5 +161,10 @@ public class App {
         }
         System.out.println("<-------------- Fim -------------->");
         sc.close();
+    }
+
+    public static String removerAcentos(String str) {
+        String normalizado = Normalizer.normalize(str, Normalizer.Form.NFD);
+        return normalizado.replaceAll("\\p{M}", "");
     }
 }
