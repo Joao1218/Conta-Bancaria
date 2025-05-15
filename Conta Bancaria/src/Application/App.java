@@ -1,8 +1,6 @@
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +19,14 @@ public class App {
         sc.nextLine();
         while (!resposta.equals(3)) {
             if (resposta.equals(1)) {
-
+                System.out.println("<-------------- Login de Usuario -------------->");
+                System.out.println("Email: ");
+                String email = sc.nextLine();
+                System.out.println("Senha: ");
+                Integer senha = sc.nextInt();
+                if(Autenticacao.login(email, senha, path)){
+                    System.out.println("<-------------- Bem vindo a sua conta "+Autenticacao.nome(email, path)+" -------------->");
+                }
             } else if (resposta.equals(2)) {
                 System.out.println("<-------------- Cadastro de Usuario -------------->");
                 System.out.print("Nome: ");
@@ -37,7 +42,7 @@ public class App {
                 System.out.print("Senha: ");
                 Integer senha = sc.nextInt();
                 Usuario usuario = new Usuario(nome, email, cpf, senha);
-                if (usuarioExiste(cpf, path)) {
+                if (Autenticacao.usuarioExiste(cpf, path)) {
                     System.out.println("Usuario já cadastrado");
                 } else {
                     try (BufferedWriter bw = new BufferedWriter(
@@ -73,27 +78,5 @@ public class App {
         }
         System.out.println("<-------------- Fim -------------->");
         sc.close();
-    }
-    public static boolean usuarioExiste(Long cpf, String caminhoArquivo) {
-        try (BufferedReader leitor = new BufferedReader(new FileReader(caminhoArquivo))) {
-            String linha;
-            while ((linha = leitor.readLine()) != null) {
-                if (linha.trim().isEmpty()) continue; 
-                String[] dados = linha.split(",");
-                if (dados.length >= 3) { 
-                    try {
-                        Long cpfArquivo = Long.parseLong(dados[2].trim());
-                        if (cpfArquivo.equals(cpf)) {
-                            return true;
-                        }
-                    } catch (NumberFormatException e) {
-                        System.out.println("CPF inválido na linha: " + linha);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Erro ao ler o arquivo: " + e.getMessage());
-        }
-        return false;
     }
 }
